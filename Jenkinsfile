@@ -15,7 +15,7 @@ pipeline {
             }
         }
 
-        stage('Login to DockerHub') {
+        stage('DockerHub Login') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
@@ -32,10 +32,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Docker image built and pushed to DockerHub!"
+            echo "Docker image built and pushed to DockerHub!"
         }
         failure {
-            echo "❌ Something went wrong."
+            echo "Something went wrong."
         }
     }
 }
