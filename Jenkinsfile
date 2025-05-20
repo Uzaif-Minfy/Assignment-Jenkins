@@ -2,41 +2,40 @@ pipeline {
     agent any
 
     environment {
-        VENV = 'venv'
+        DOCKER_IMAGE = "uzaifminfy/jenkins-assessment"
+        DOCKER_TAG = "latest"
     }
 
     stages {
-        stage ("Install") {
-            steps {
-                sh '''
-                    python3 -m venv $VENV
-                    . $VENV/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
-            }
-        }
-        stage ("Linting") {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    echo "This is my Linting Step"
-                }
-            }
-        }
-        stage ("Install Packages") {
-            steps {
-                script {
-                    echo "This is Install PAkcges Step"
-                }
-            }
-        }
-        stage ("Run Application") {
-            steps {
-                script {
-                    echo "This is my Run applcaition Step"
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                 }
             }
         }
 
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Docker image built and pushed to DockerHub!"
+        }
+        failure {
+            echo "❌ Something went wrong."
+        }
     }
 }
